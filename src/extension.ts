@@ -6,7 +6,7 @@ let recorder: KeyStrokeRecorder;
 
 export function activate(context: vscode.ExtensionContext) {
 
-	recorder = new KeyStrokeRecorder(context);
+	recorder = new KeyStrokeRecorder();
 	vscode.window.showInformationMessage("KSPT activate");
 
   	vscode.commands.registerCommand('extension.logKey', (args) => {

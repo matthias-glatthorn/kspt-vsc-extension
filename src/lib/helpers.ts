@@ -20,7 +20,7 @@ export function getFileExtensionFromFullPath(fullPath: string): FileNameWithExte
   const extension = (()=>{
     if (dotCount && dotCount > 1) {
       const betweenDots = fileName.split('.');
-      return betweenDots.slice(1).slice(dotCount * -1).join('.');
+      return '.' + betweenDots.slice(1).slice(dotCount * -1).join('.');
     } else {
       return path.parse(fullPath).ext.length > 0 ? path.parse(fullPath).ext : null;
     }

@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { FileNameWithExtension, formatDate, getFileExtensionFromFullPath } from './helpers';
+import * as exceptions from "./exceptions.json";
 
 type FileContent = {
     'known': { [key: string]: number };
     'unknown': { [key: string]: number };
+    'exception': { [key: string]: number };
 };
 
 
@@ -14,35 +16,37 @@ export default class KeyStrokeRecorder {
 
     // Date
     private todaysDate = formatDate(new Date());
-    
+    private autoSaveTimeout?: NodeJS.Timer;
+
     // Directory and file
     //private saveDir = 'C:\\KSPT';
-    private saveDir:string;
+    public saveDir:string;
     private fullFilePath: string;
     private filePrefix = "kspt_";
     private fileSuffix = ".json";
-    private fileName = this.filePrefix + this.todaysDate + this.fileSuffix;
+    public fileName = this.filePrefix + this.todaysDate + this.fileSuffix;
     
 
     // State
 
-    private knownExtensionsCount: { [key: string]: number };
-    private unknownExtensionsCount: { [key: string]: number };
+    public knownExtensionsCount: { [key: string]: number };
+    public unknownExtensionsCount: { [key: string]: number };
+    public excepionExtensionCount: { [key: string]: number };
 
     
-    constructor(private context: vscode.ExtensionContext) {
+    constructor() {
         const saveDir = this.config.get('saveDir') as string;
         this.saveDir = saveDir ? saveDir : 'C:\\KSPT';
 
         this.fullFilePath = this.saveDir + '\\' + this.fileName;
         
-
         this.ensureDir();
         this.ensureTodaysFile();
 
         const data = this.readTodaysFile();
         this.knownExtensionsCount = data['known'] ? data['known'] : {};
         this.unknownExtensionsCount = data['unknown'] ? data['unknown'] : {};
+        this.excepionExtensionCount = data['exception'] ? data['exception'] : {};
 
         this.startAutoSave();
     }
@@ -59,14 +63,21 @@ export default class KeyStrokeRecorder {
 
         const fullFilePath = editor.document.fileName;
         const {extension, name}: FileNameWithExtension = getFileExtensionFromFullPath(fullFilePath);
+        const isException = extension ? exceptions.includes(extension) : false;
         
+        if (isException) {
+            this.ensureExcepionExtensionCount(name);
+            this.excepionExtensionCount[name]++;
+            return;
+        }
         if (extension) {
             this.ensureKnownExtension(extension);
             this.knownExtensionsCount[extension]++;
-        } else {
-            this.ensureUnknownExtension(name);
-            this.unknownExtensionsCount[name]++;
+            return;
         }
+        
+        this.ensureUnknownExtension(name);
+        this.unknownExtensionsCount[name]++;
     }
 
     public saveStateToFile() {
@@ -75,7 +86,8 @@ export default class KeyStrokeRecorder {
             fs.writeFileSync(this.fullFilePath, JSON.stringify({
                 ...data,
                 'known': this.knownExtensionsCount,
-                'unknown': this.unknownExtensionsCount
+                'unknown': this.unknownExtensionsCount,
+                'exception': this.excepionExtensionCount
             }));
           } catch (err) {
             console.error(err);
@@ -109,6 +121,12 @@ export default class KeyStrokeRecorder {
         }
     }
 
+    private ensureExcepionExtensionCount(fileName: string) {
+        if (!this.excepionExtensionCount.hasOwnProperty(fileName)) {
+            this.excepionExtensionCount[fileName] = 0;
+        }
+    }
+
     private ensureUnknownExtension(fileName: string) {
         if (!this.unknownExtensionsCount.hasOwnProperty(fileName)) {
             this.unknownExtensionsCount[fileName] = 0;
@@ -117,8 +135,17 @@ export default class KeyStrokeRecorder {
 
     private startAutoSave() {
         const minutes = 1;
-        setInterval(() => {
+        this.autoSaveTimeout = setInterval(() => {
             this.saveStateToFile();
         }, minutes * 60000);
     }
+
+    /**
+     * Used in tests 
+     */
+
+    public stopAutoSave() {
+        clearInterval(this.autoSaveTimeout);
+    }
+
 }
