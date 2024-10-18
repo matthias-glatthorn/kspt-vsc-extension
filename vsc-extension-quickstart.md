@@ -45,3 +45,21 @@
 * Reduce the extension size and improve the startup time by [bundling your extension](https://code.visualstudio.com/api/working-with-extensions/bundling-extension).
 * [Publish your extension](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) on the VS Code extension marketplace.
 * Automate builds by setting up [Continuous Integration](https://code.visualstudio.com/api/working-with-extensions/continuous-integration).
+
+## Create installable vsix file
+
+Make sure you have Node.js installed. Then run:
+
+```
+npm install -g @vscode/vsce
+```
+
+You can use vsce to easily package and publish your extensions:
+
+```
+$ cd myExtension
+$ vsce package
+# myExtension.vsix generated
+$ vsce publish
+# <publisher id>.myExtension published to VS Code Marketplace
+```

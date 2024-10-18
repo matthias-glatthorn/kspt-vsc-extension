@@ -1,3 +1,3 @@
 # kspt-vsc-extension
 
-Lorem ipsum
+Key strokes per technology
