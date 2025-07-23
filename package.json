@@ -3,6 +3,7 @@
   "displayName": "kspt-vsc-extension",
   "description": "Key strokes per technology extension for vscode.",
   "author": "Matthias Glatthorn <mail@matthias-glatthorn.de> (https://matthias-glatthorn.de)",
+  "publisher": "mglatthorn",
   "repository": "https://github.com/theoreticalsampling/kspt-vsc-extension",
   "version": "0.0.1",
   "engines": {
